@@ -8,7 +8,11 @@ export default class TicketViewer extends React.Component {
         this.state = {
             page: 1,
             tickets: [],
-            error: false
+            error: false,
+            count: 0,
+            fetching: true,
+            previousEnd: true,
+            nextEnd: false
         };
     }
 
@@ -21,11 +25,25 @@ export default class TicketViewer extends React.Component {
                 // has occured on server side
                 this.setState({
                     page: 1,
-                    tickets: response
+                    tickets: response,
+                    error: false
                 })
             })
             .catch(error => {
                 console.log(error);
+            })
+
+        fetch('http://localhost:3000/tickets/count')
+            .then(responseUnParsed => responseUnParsed.json())
+            .then(response => {
+                this.setState({
+                    count: response.ticketCount,
+                    error: false,
+                    fetching: false
+                })
+            })
+            .catch(error => {
+                console.log(error)
             })
     }
 
@@ -63,7 +81,15 @@ export default class TicketViewer extends React.Component {
         return (
             <Grid centered>
                 <Grid.Column width="14">
-                    {this.renderTickets()}
+                    <Grid.Row>
+
+                    </Grid.Row>
+                    <Grid.Row>
+                        {this.renderTickets()}
+                    </Grid.Row>
+                    <Grid.Row>
+
+                    </Grid.Row>
                 </Grid.Column>
             </Grid>
         );
