@@ -34,35 +34,52 @@ export default class TicketViewer extends React.Component {
         fetch('http://localhost:3000/ticketsOnPage/1')
             .then(responseUnParsed => responseUnParsed.json())
             .then(response => {
-                // TODO: Check if the tickets list is empty, if it is then error
-                // has occurred on server side
-                this.setState({
-                    page: 1,
-                    tickets: response,
-                    error: false
-                })
-            })
-            .catch(error => {
-                console.log(error);
-            })
-
-        fetch('http://localhost:3000/tickets/count')
-            .then(responseUnParsed => responseUnParsed.json())
-            .then(response => {
-                this.setState({
-                    count: response.ticketCount,
-                    error: false,
-                    fetching: false,
-                    previousEnd: true
-                })
-
-                if (this.state.count < this.state.page * 25) {
-                    this.setState({nextEnd: true});
+                if(Array.isArray(response)) {
+                    this.setState({
+                        page: 1,
+                        tickets: response,
+                        error: false
+                    })
+                } else {
+                    // Got an error from server
+                    this.setState({
+                        error: true,
+                        errorMessage: response.error
+                    });
                 }
             })
             .catch(error => {
-                console.log(error)
+                console.log(error);
+                this.setState({
+                    error: true,
+                    errorMessage: "Error occurred while fetching data from node backend"
+                });
             })
+
+        // Fetch the count only if no error occurred in the previous api call
+        if(this.state.error === false) {
+            fetch('http://localhost:3000/tickets/count')
+                .then(responseUnParsed => responseUnParsed.json())
+                .then(response => {
+                    this.setState({
+                        count: response.ticketCount,
+                        error: false,
+                        fetching: false,
+                        previousEnd: true
+                    })
+
+                    if (this.state.count < this.state.page * 25) {
+                        this.setState({nextEnd: true});
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.setState({
+                        error: true,
+                        errorMessage: "Error occurred while fetching data from node backend"
+                    });
+                })
+        }
     }
 
     getNextPage(_event, _data) {
@@ -71,22 +88,32 @@ export default class TicketViewer extends React.Component {
         fetch('http://localhost:3000/ticketsOnPage/' + newPage)
             .then(responseUnParsed => responseUnParsed.json())
             .then(response => {
-                // TODO: Check if the tickets list is empty, if it is then error
-                // has occurred on server side
-                this.setState({
-                    page: newPage,
-                    tickets: response,
-                    error: false,
-                    previousEnd: false
-                })
+                if(Array.isArray(response)) {
+                    this.setState({
+                        page: newPage,
+                        tickets: response,
+                        error: false,
+                        previousEnd: false
+                    })
 
-                // Disable next button on last page
-                if (this.state.count < this.state.page * 25) {
-                    this.setState({nextEnd: true});
+                    // Disable next button on last page
+                    if (this.state.count < this.state.page * 25) {
+                        this.setState({nextEnd: true});
+                    }
+                } else {
+                    // Got an error from server
+                    this.setState({
+                        error: true,
+                        errorMessage: response.error
+                    });
                 }
             })
             .catch(error => {
                 console.log(error);
+                this.setState({
+                    error: true,
+                    errorMessage: "Error occurred while fetching data from node backend"
+                });
             })
     }
 
@@ -96,22 +123,32 @@ export default class TicketViewer extends React.Component {
         fetch('http://localhost:3000/ticketsOnPage/' + newPage)
             .then(responseUnParsed => responseUnParsed.json())
             .then(response => {
-                // TODO: Check if the tickets list is empty, if it is then error
-                // has occurred on server side
-                this.setState({
-                    page: newPage,
-                    tickets: response,
-                    error: false,
-                    nextEnd: false
-                })
+                if(Array.isArray(response)) {
+                    this.setState({
+                        page: newPage,
+                        tickets: response,
+                        error: false,
+                        nextEnd: false
+                    })
 
-                // Disable previous button on first page
-                if (this.state.page === 1) {
-                    this.setState({previousEnd: true});
+                    // Disable previous button on first page
+                    if (this.state.page === 1) {
+                        this.setState({previousEnd: true});
+                    }
+                } else {
+                    // Got an error from server
+                    this.setState({
+                        error: true,
+                        errorMessage: response.error
+                    });
                 }
             })
             .catch(error => {
                 console.log(error);
+                this.setState({
+                    error: true,
+                    errorMessage: "Error occurred while fetching data from node backend"
+                });
             })
     }
 
@@ -120,13 +157,25 @@ export default class TicketViewer extends React.Component {
         fetch('http://localhost:3000/ticket/' + ticketId)
             .then(responseUnParsed => responseUnParsed.json())
             .then(response => {
-                this.setState({
-                    displayTicket: true,
-                    currentTicket: response
-                });
+                if(response.error === undefined) {
+                    this.setState({
+                        displayTicket: true,
+                        currentTicket: response
+                    });
+                } else {
+                    // Got an error from server
+                    this.setState({
+                        error: true,
+                        errorMessage: response.error
+                    });
+                }
             })
             .catch(error => {
                 console.log(error);
+                this.setState({
+                    error: true,
+                    errorMessage: "Error occurred while fetching data from node backend"
+                });
             })
     }
 
