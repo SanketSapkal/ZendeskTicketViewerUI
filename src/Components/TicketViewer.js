@@ -1,5 +1,10 @@
 import React from 'react';
-import { Button, Card, Grid, Label } from 'semantic-ui-react';
+import {Button,
+        Card,
+        Grid,
+        Icon,
+        Label,
+        Modal} from 'semantic-ui-react';
 
 export default class TicketViewer extends React.Component {
     constructor(props) {
@@ -9,14 +14,19 @@ export default class TicketViewer extends React.Component {
             page: 1,
             tickets: [],
             error: false,
+            errorMessage: undefined,
             count: 0,
             fetching: true,
             previousEnd: true,
-            nextEnd: false
+            nextEnd: false,
+            displayTicket: false,
+            currentTicket: undefined
         };
 
         this.getNextPage = this.getNextPage.bind(this);
         this.getPreviousPage = this.getPreviousPage.bind(this);
+        this.getTicket = this.getTicket.bind(this);
+        this.closeTicket = this.closeTicket.bind(this);
     }
 
     componentDidMount() {
@@ -105,10 +115,71 @@ export default class TicketViewer extends React.Component {
             })
     }
 
+    getTicket(_event, data) {
+        const ticketId = data.ticketId;
+        fetch('http://localhost:3000/ticket/' + ticketId)
+            .then(responseUnParsed => responseUnParsed.json())
+            .then(response => {
+                this.setState({
+                    displayTicket: true,
+                    currentTicket: response
+                });
+            })
+            .catch(error => {
+                console.log(error);
+            })
+    }
+
+    closeTicket() {
+        this.setState({
+            currentTicket: undefined,
+            displayTicket: false
+        });
+    }
+
+    renderTicket() {
+        return (
+            <Modal
+             open={this.state.displayTicket}>
+                <Modal.Content>
+                    <p>{JSON.stringify(this.state.currentTicket)}</p>
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button
+                     color='black'
+                     onClick={this.closeTicket}>
+                        <Icon name='remove'></Icon>
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        );
+    }
+
+    renderErrorModal() {
+        return (
+            <Modal
+             open={this.state.error}>
+                <Modal.Content>
+                    <p>{this.state.errorMessage}</p>
+                    <p>{"Try refreshing the page"}</p>
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button
+                     color='black'
+                     onClick={this.closeErrorModal}>
+                        <Icon name='remove'></Icon>
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        )
+    }
 
     renderTickets() {
         const tickets = this.state.tickets.map(ticket =>(
-            <Card fluid>
+            <Card
+             fluid
+             onClick={this.getTicket}
+             ticketId={ticket.id}>
                 <Card.Content>
                     <Card.Header>
                         <Grid centered>
@@ -143,6 +214,7 @@ export default class TicketViewer extends React.Component {
                 <Grid.Column floated="right">
                     <Button
                         icon
+                        // Disable button while fetching data or on 1st page
                         disabled={this.state.fetching || this.state.previousEnd}
                         color="blue"
                         onClick={this.getPreviousPage}
@@ -154,6 +226,7 @@ export default class TicketViewer extends React.Component {
                 <Grid.Column floated="left">
                     <Button
                         icon
+                        // Disable button while fetching data or on last page
                         disabled={this.state.fetching || this.state.nextEnd}
                         color="blue"
                         onClick={this.getNextPage}
@@ -164,6 +237,8 @@ export default class TicketViewer extends React.Component {
             </Grid>
             <Grid centered>
                 <Grid.Column width="14">
+                    {this.renderTicket()}
+                    {this.renderErrorModal()}
                     {this.renderTickets()}
                 </Grid.Column>
             </Grid>
@@ -171,6 +246,7 @@ export default class TicketViewer extends React.Component {
                 <Grid.Column floated="right">
                     <Button
                         icon
+                        // Disable button while fetching data or on 1st page
                         disabled={this.state.fetching || this.state.previousEnd}
                         color="blue"
                         onClick={this.getPreviousPage}
@@ -182,6 +258,7 @@ export default class TicketViewer extends React.Component {
                 <Grid.Column floated="left">
                     <Button
                         icon
+                        // Disable button while fetching data or on last page
                         disabled={this.state.fetching || this.state.nextEnd}
                         color="blue"
                         onClick={this.getNextPage}
